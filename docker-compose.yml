@@ -1,0 +1,92 @@
+services:
+  ecom-ws-discovery-service:
+    build: ./untitled/discrovery-service
+    container_name: ecom-ws-discovery-service
+    ports:
+      - '8761:8761'
+    expose:
+      - '8761'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      retries: 4
+
+  ecom-ws-config-service:
+    build: ./untitled/config-service
+    container_name: ecom-ws-config-service
+    ports:
+      - '9999:9999'
+    expose:
+      - '9999'
+    environment:
+      - DISCOVERY_SERVICE_URL=http://ecom-ws-discovery-service:8761/eureka
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9999/actuator/health"]
+      interval: 10s
+      retries: 4
+    depends_on:
+      ecom-ws-discovery-service:
+        condition: service_healthy
+
+  ecom-ws-customer-service:
+    build: ./untitled/customer-service
+    container_name: ecom-ws-customer-service
+    ports:
+      - '8082:8082'
+    expose:
+      - '8082'
+    environment:
+      - DISCOVERY_SERVICE_URL=http://ecom-ws-discovery-service:8761/eureka
+      - CONFIG_SERVER_URL=http://ecom-ws-config-service:9999
+    depends_on:
+      ecom-ws-config-service:
+        condition: service_healthy
+
+  ecome-ws-inventory-service:
+    build: ./untitled/inventory-service
+    container_name: ecome-ws-inventory-service
+    ports:
+      - '8083:8083'
+    expose:
+      - '8083'
+    environment:
+      - DISCOVERY_SERVICE_URL=http://ecom-ws-discovery-service:8761/eureka
+      - CONFIG_SERVER_URL=http://ecom-ws-config-service:9999
+    depends_on:
+      ecom-ws-config-service:
+        condition: service_healthy
+
+  ecome-ws-billing-service:
+    build: ./untitled/billing-service
+    container_name: ecome-ws-billing-service
+    ports:
+      - '8085:8085'
+    expose:
+      - '8085'
+    environment:
+      - DISCOVERY_SERVICE_URL=http://ecom-ws-discovery-service:8761/eureka
+      - CONFIG_SERVER_URL=http://ecom-ws-config-service:9999
+    depends_on:
+      ecom-ws-config-service:
+        condition: service_healthy
+
+  ecome-ws-gateway-service:
+    build: ./untitled/gateway-service
+    container_name: ecome-ws-gateway-service
+    ports:
+      - '8088:8088'
+    expose:
+      - '8088'
+    environment:
+      - DISCOVERY_SERVICE_URL=http://ecom-ws-discovery-service:8761/eureka
+      - CONFIG_SERVER_URL=http://ecom-ws-config-service:9999
+    depends_on:
+      ecom-ws-config-service:
+        condition: service_healthy
+  ang-app :
+    build: ./app-angular
+    container_name: ang-app
+    ports:
+      - '80:80'
+    expose:
+      - '80'
